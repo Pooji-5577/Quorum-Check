@@ -155,10 +155,12 @@ if (!isset($_SESSION['quorumcheck_votes'])) {
         }
 
         .pixel-field--hero {
-            right: -1%;
-            bottom: 7%;
-            width: min(40vw, 480px);
-            height: 300px;
+            right: -10%;
+            bottom: 2%;
+            width: min(60vw, 760px);
+            height: 370px;
+            border-bottom-right-radius: 26px;
+            overflow: hidden;
             opacity: 0.86;
             background-image:
                 linear-gradient(90deg, rgba(240, 74, 35, 0.22) 0 48px, transparent 48px),
