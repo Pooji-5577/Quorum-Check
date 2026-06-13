@@ -112,6 +112,13 @@ if (!isset($_SESSION['quorumcheck_votes'])) {
             animation: pulse 2.5s infinite;
         }
 
+        .sentiment-map-bg {
+            background-image: url("img/sentiment-map.png");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
         .pixel-field {
             position: absolute;
             pointer-events: none;
@@ -161,12 +168,12 @@ if (!isset($_SESSION['quorumcheck_votes'])) {
         }
 
         .pixel-field--map {
-            right: -4%;
-            bottom: -18%;
-            width: 420px;
-            height: 320px;
-            opacity: 0.56;
-            mask-image: linear-gradient(135deg, transparent 0%, black 42%, transparent 100%);
+            right: -5%;
+            bottom: -10%;
+            width: 460px;
+            height: 280px;
+            opacity: 0.38;
+            mask-image: linear-gradient(135deg, transparent 0%, black 50%, transparent 100%);
         }
 
         @keyframes pixelDrift {
@@ -253,34 +260,34 @@ if (!isset($_SESSION['quorumcheck_votes'])) {
     </header>
 
     <main class="relative z-10">
-        <section class="mx-auto max-w-7xl px-5 pb-14 pt-10 sm:px-7 lg:pb-24 lg:pt-14">
-            <div class="overflow-hidden rounded-[2rem] border border-black/8 bg-white/72 shadow-soft">
-                <div class="relative overflow-hidden px-5 py-16 sm:px-8 lg:px-16 lg:py-24">
+        <section class="mx-auto max-w-[94rem] px-4 pb-14 pt-8 sm:px-7 lg:pb-24 lg:pt-12">
+            <div class="relative overflow-hidden after:pointer-events-none after:absolute after:inset-x-8 after:bottom-0 after:h-28 after:rounded-full after:bg-black/12 after:blur-3xl after:content-['']">
+                <div class="relative overflow-hidden px-5 py-20 sm:px-10 lg:px-20 lg:py-32">
                     <div class="absolute inset-0 bg-[radial-gradient(circle_at_22%_40%,rgba(255,244,232,.86),transparent_26rem),radial-gradient(circle_at_70%_25%,rgba(246,247,251,.88),transparent_28rem),radial-gradient(circle_at_78%_70%,rgba(240,74,35,.16),transparent_24rem)]"></div>
                     <div class="pixel-field pixel-field--hero"></div>
                     <div class="absolute left-1/2 top-8 h-[560px] w-[760px] -translate-x-1/2 grid-mesh opacity-70"></div>
 
-                    <div class="relative mx-auto max-w-4xl text-center">
+                    <div class="relative mx-auto max-w-5xl text-center">
                         <h1 class="font-display text-5xl font-black leading-[0.96] text-ink sm:text-7xl lg:text-8xl">
                             Where Public Opinion Comes Alive
                         </h1>
-                        <p class="mx-auto mt-7 max-w-2xl text-lg leading-8 text-black/62 sm:text-xl">
+                        <p class="mx-auto mt-8 max-w-3xl text-xl leading-8 text-black/62 sm:text-2xl sm:leading-9">
                             Create polls, debate ideas, track sentiment, and discover what people really think in real time.
                         </p>
-                        <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                            <a href="#create" class="rounded-full bg-ink px-7 py-4 text-sm font-extrabold text-white shadow-soft transition hover:-translate-y-0.5">Start Polling</a>
-                            <a href="#feed" class="rounded-full border border-black/10 bg-white px-7 py-4 text-sm font-extrabold shadow-sm transition hover:-translate-y-0.5">Explore Live Opinions</a>
+                        <div class="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                            <a href="#create" class="rounded-full bg-ink px-8 py-4 text-base font-extrabold text-white shadow-soft transition hover:-translate-y-0.5">Start Polling</a>
+                            <a href="#feed" class="rounded-full border border-black/10 bg-white px-8 py-4 text-base font-extrabold shadow-sm transition hover:-translate-y-0.5">Explore Live Opinions</a>
                         </div>
                     </div>
 
-                    <div class="relative mt-14 grid gap-4 lg:grid-cols-[1fr_1.15fr_1fr]">
+                    <div class="relative mt-20 grid gap-5 lg:grid-cols-[1fr_1.18fr_1fr]">
                         <div class="space-y-4">
-                            <article class="glass rotate-[-2deg] rounded-3xl p-5">
+                            <article class="glass rotate-[-2deg] rounded-3xl p-6">
                                 <div class="flex items-center justify-between">
                                     <span class="rounded-full bg-lilac/10 px-3 py-1 text-xs font-extrabold text-lilac">LIVE POLL</span>
                                     <span class="text-xs font-bold text-black/45">12.8k votes</span>
                                 </div>
-                                <h3 class="mt-4 text-lg font-extrabold">Should universities use AI tutors in every course?</h3>
+                                <h3 class="mt-5 text-xl font-extrabold">Should universities use AI tutors in every course?</h3>
                                 <div class="mt-4 space-y-3">
                                     <div>
                                         <div class="mb-1 flex justify-between text-sm font-bold"><span>Yes, with policy</span><span>61%</span></div>
@@ -292,7 +299,7 @@ if (!isset($_SESSION['quorumcheck_votes'])) {
                                     </div>
                                 </div>
                             </article>
-                            <article class="glass rounded-3xl p-5">
+                            <article class="glass rounded-3xl p-6">
                                 <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-black/38">Anonymous trust</p>
                                 <div class="mt-3 flex items-center gap-4">
                                     <div class="grid h-14 w-14 place-items-center rounded-2xl bg-ink text-white">
@@ -306,11 +313,11 @@ if (!isset($_SESSION['quorumcheck_votes'])) {
                             </article>
                         </div>
 
-                        <article class="glass rounded-[2rem] p-5 shadow-float">
+                        <article class="glass rounded-[2rem] p-6 shadow-float">
                             <div class="flex items-center justify-between border-b border-black/5 pb-4">
                                 <div>
                                     <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-black/38">Social feed preview</p>
-                                    <h2 class="mt-1 text-2xl font-extrabold">Every post is a poll</h2>
+                                    <h2 class="mt-1 text-3xl font-extrabold">Every post is a poll</h2>
                                 </div>
                                 <span class="rounded-full bg-ink px-3 py-1 text-xs font-bold text-white">Trending</span>
                             </div>
@@ -346,24 +353,21 @@ if (!isset($_SESSION['quorumcheck_votes'])) {
                         </article>
 
                         <div class="space-y-4">
-                            <article class="glass rotate-[2deg] rounded-3xl p-5">
+                            <article class="glass rotate-[2deg] rounded-3xl p-6">
                                 <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-black/38">AI insight</p>
                                 <h3 class="mt-3 font-extrabold">Consensus is rising in three regions.</h3>
                                 <p class="mt-2 text-sm leading-6 text-black/55">The strongest argument cites budget transparency and measurable timelines.</p>
                             </article>
-                            <article class="glass rounded-3xl p-5">
+                            <article class="glass rounded-3xl p-6">
                                 <div class="flex items-center justify-between">
                                     <span class="font-extrabold">Sentiment map</span>
                                     <span class="rounded-full bg-[#2457ff]/10 px-3 py-1 text-xs font-bold text-[#1a3ab2]">Live</span>
                                 </div>
-                                <div class="relative mt-4 h-40 overflow-hidden rounded-3xl bg-[linear-gradient(135deg,#f8fbff,#fff4dd)]">
-                                    <span class="map-dot absolute left-[18%] top-[34%] h-5 w-5 rounded-full bg-lilac"></span>
-                                    <span class="map-dot absolute left-[48%] top-[52%] h-7 w-7 rounded-full bg-[#2457ff]"></span>
-                                    <span class="map-dot absolute left-[72%] top-[30%] h-4 w-4 rounded-full bg-[#ffb23f]"></span>
-                                    <span class="absolute inset-x-5 bottom-5 rounded-2xl bg-white/72 p-3 text-xs font-bold shadow-sm">Austin +18 support · Boston split · London +32 verified turnout</span>
+                                <div class="sentiment-map-bg relative mt-4 h-48 overflow-hidden rounded-3xl">
+                                    <span class="absolute inset-x-4 bottom-4 rounded-2xl bg-white/82 p-3 text-xs font-bold shadow-sm">Austin +18 support · Boston split · London +32 verified turnout</span>
                                 </div>
                             </article>
-                            <article class="glass rounded-3xl p-5">
+                            <article class="glass rounded-3xl p-6">
                                 <p class="text-xs font-extrabold uppercase tracking-[0.22em] text-black/38">Prediction market</p>
                                 <div class="mt-3 flex items-end justify-between">
                                     <div>
@@ -459,16 +463,7 @@ if (!isset($_SESSION['quorumcheck_votes'])) {
                     </div>
                 </div>
 
-                <div class="relative mt-8 min-h-[420px] overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#fffaf6,#f6f7fb_48%,#fff0e8)] p-6">
-                    <div class="pixel-field pixel-field--map"></div>
-                    <div class="absolute inset-0 opacity-50 grid-mesh"></div>
-                    <div class="absolute left-[8%] top-[22%] h-24 w-24 rounded-full bg-lilac/25 blur-xl"></div>
-                    <div class="absolute left-[28%] top-[52%] h-32 w-32 rounded-full bg-[#2457ff]/18 blur-xl"></div>
-                    <div class="absolute left-[68%] top-[30%] h-28 w-28 rounded-full bg-[#ffb23f]/20 blur-xl"></div>
-                    <span class="map-dot absolute left-[15%] top-[28%] h-6 w-6 rounded-full bg-lilac"></span>
-                    <span class="map-dot absolute left-[38%] top-[58%] h-9 w-9 rounded-full bg-[#2457ff]"></span>
-                    <span class="map-dot absolute left-[70%] top-[36%] h-7 w-7 rounded-full bg-[#ffb23f]"></span>
-                    <span class="map-dot absolute left-[84%] top-[64%] h-5 w-5 rounded-full bg-[#6f7cff]"></span>
+                <div class="sentiment-map-bg relative mt-8 min-h-[500px] overflow-hidden rounded-[2rem] p-6">
                     <div class="absolute bottom-6 left-6 right-6 grid gap-3 md:grid-cols-4">
                         <div class="glass rounded-2xl p-4"><p class="text-xs font-bold text-black/45">Austin</p><p class="font-extrabold">Transit +34</p></div>
                         <div class="glass rounded-2xl p-4"><p class="text-xs font-bold text-black/45">Boston</p><p class="font-extrabold">Housing split</p></div>
