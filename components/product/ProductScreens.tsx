@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   ArrowUpRight,
@@ -23,9 +24,11 @@ type ProductPoll = {
   id: number;
   author: string;
   topic: string;
+  pollType: string;
   question: string;
   createdAt: string;
   options: Array<{ id: number; label: string; votes: number }>;
+  regionalResults: Record<SentimentPeriod, RegionalResult[]>;
   comments: Array<{
     id: number;
     author_name: string;
@@ -33,6 +36,14 @@ type ProductPoll = {
     body: string;
     created_at: string;
   }>;
+  debate: {
+    framingQuestion: string;
+    context: string;
+    supportLabel: string;
+    opposeLabel: string;
+    groundRules: string;
+    canEdit: boolean;
+  } | null;
   votedOptionId: number | null;
 };
 type Community = {
@@ -45,6 +56,14 @@ type Community = {
 type ProductData = {
   polls: ProductPoll[];
   communities: Community[];
+  personalization: {
+    configured: boolean;
+    selectedTopics: string[];
+    availableTopics: string[];
+    rankingStyle: RankingStyle;
+    preferredFormats: PreferredFormat[];
+    discoveryLevel: DiscoveryLevel;
+  };
   insights: {
     polls: number;
     votes: number;
@@ -53,12 +72,108 @@ type ProductData = {
   };
 };
 
-function useProductData() {
+type FeedScope = "For you" | "Following" | "Newest";
+type RankingStyle = "focused" | "balanced" | "fresh";
+type PreferredFormat = "Multiple choice" | "Ranking" | "Debate" | "Survey";
+type DiscoveryLevel = "familiar" | "balanced" | "adventurous";
+type SentimentPeriod = "24 hours" | "7 days" | "30 days";
+type RegionalResult = {
+  name: string;
+  total: number;
+  options: Array<{
+    optionId: number;
+    label: string;
+    votes: number;
+    percent: number;
+  }>;
+};
+
+const rankingOptions: Array<{
+  value: RankingStyle;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "focused",
+    label: "Stay focused",
+    description: "Prioritize only the topics you selected.",
+  },
+  {
+    value: "balanced",
+    label: "Balanced mix",
+    description: "Mix your interests with relevant popular discussions.",
+  },
+  {
+    value: "fresh",
+    label: "Latest first",
+    description: "Favor the newest conversations across Quorum Check.",
+  },
+];
+
+const formatOptions: Array<{
+  value: PreferredFormat;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "Multiple choice",
+    label: "Quick polls",
+    description: "Fast questions with clear choices.",
+  },
+  {
+    value: "Ranking",
+    label: "Ranked choices",
+    description: "Put several priorities in order.",
+  },
+  {
+    value: "Debate",
+    label: "Debates",
+    description: "Read and respond to different viewpoints.",
+  },
+  {
+    value: "Survey",
+    label: "Detailed surveys",
+    description: "Explore a subject through multiple questions.",
+  },
+];
+
+const discoveryOptions: Array<{
+  value: DiscoveryLevel;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "familiar",
+    label: "Mostly familiar",
+    description: "Stay close to the topics you follow.",
+  },
+  {
+    value: "balanced",
+    label: "Some discovery",
+    description: "Blend followed topics with relevant new ones.",
+  },
+  {
+    value: "adventurous",
+    label: "More variety",
+    description: "Introduce more perspectives outside your usual interests.",
+  },
+];
+
+const feedScopeQuery: Record<FeedScope, string> = {
+  "For you": "for-you",
+  Following: "following",
+  Newest: "newest",
+};
+
+function useProductData(scope?: FeedScope) {
   const [data, setData] = useState<ProductData | null>(null);
   const [error, setError] = useState("");
   const refresh = useCallback(async () => {
     try {
-      const response = await fetch("/api/product", { cache: "no-store" });
+      const query = scope ? `?scope=${feedScopeQuery[scope]}` : "";
+      const response = await fetch(`/api/product${query}`, {
+        cache: "no-store",
+      });
       const result = await response.json();
       if (!response.ok)
         throw new Error(result.error || "Unable to load product data.");
@@ -71,7 +186,7 @@ function useProductData() {
           : "Unable to load product data.",
       );
     }
-  }, []);
+  }, [scope]);
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -146,6 +261,11 @@ function PollCard({
           </div>
         </div>
       </div>
+      <div className="mt-4">
+        <span className="inline-flex rounded-full bg-butter px-3 py-1 text-xs font-extrabold text-lilac">
+          {poll.pollType}
+        </span>
+      </div>
       <h2 className="mt-5 font-display text-xl font-extrabold leading-snug sm:text-2xl">
         {poll.question}
       </h2>
@@ -177,10 +297,14 @@ function PollCard({
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-black/42">
         <span>{total.toLocaleString()} votes</span>
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5">
+          <a
+            href={`/debate?poll=${poll.id}`}
+            className="flex items-center gap-1.5 text-lilac hover:text-ink"
+          >
             <MessageCircle className="h-4 w-4" />
-            {poll.comments.length} responses
-          </span>
+            {poll.debate ? "Join debate" : "Start debate"}
+            {poll.comments.length ? ` · ${poll.comments.length}` : ""}
+          </a>
           <button
             onClick={share}
             className="flex items-center gap-1.5 hover:text-lilac"
@@ -194,9 +318,103 @@ function PollCard({
   );
 }
 
-export function FeedScreen() {
-  const [scope, setScope] = useState("For you");
-  const { data, error, refresh } = useProductData();
+export function FeedScreen({
+  openPersonalization = false,
+}: {
+  openPersonalization?: boolean;
+}) {
+  const [scope, setScope] = useState<FeedScope>("For you");
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [selectedTopics, setSelectedTopics] = useState<string[] | null>(null);
+  const [rankingStyle, setRankingStyle] = useState<RankingStyle | null>(null);
+  const [preferredFormats, setPreferredFormats] = useState<
+    PreferredFormat[] | null
+  >(null);
+  const [discoveryLevel, setDiscoveryLevel] = useState<DiscoveryLevel | null>(
+    null,
+  );
+  const [preferenceError, setPreferenceError] = useState("");
+  const [savingPreferences, setSavingPreferences] = useState(false);
+  const router = useRouter();
+  const { data, error, refresh } = useProductData(scope);
+  const personalization = data?.personalization;
+  const activeTopics = selectedTopics ?? personalization?.selectedTopics ?? [];
+  const activeRankingStyle =
+    rankingStyle ?? personalization?.rankingStyle ?? "balanced";
+  const activeFormats = preferredFormats ??
+    personalization?.preferredFormats ?? ["Multiple choice"];
+  const activeDiscoveryLevel =
+    discoveryLevel ?? personalization?.discoveryLevel ?? "balanced";
+  const preferencesOpen =
+    openPersonalization ||
+    showPreferences ||
+    personalization?.configured === false;
+
+  function toggleTopic(topic: string) {
+    setSelectedTopics((current) =>
+      (current ?? activeTopics).includes(topic)
+        ? (current ?? activeTopics).filter((item) => item !== topic)
+        : [...(current ?? activeTopics), topic],
+    );
+  }
+
+  function toggleFormat(format: PreferredFormat) {
+    setPreferredFormats((current) => {
+      const formats = current ?? activeFormats;
+      return formats.includes(format)
+        ? formats.filter((item) => item !== format)
+        : [...formats, format];
+    });
+  }
+
+  function editPreferences() {
+    setSelectedTopics(personalization?.selectedTopics || []);
+    setRankingStyle(personalization?.rankingStyle || "balanced");
+    setPreferredFormats(
+      personalization?.preferredFormats || ["Multiple choice"],
+    );
+    setDiscoveryLevel(personalization?.discoveryLevel || "balanced");
+    setPreferenceError("");
+    setShowPreferences(true);
+  }
+
+  async function savePreferences() {
+    if (!activeTopics.length) {
+      setPreferenceError("Choose at least one topic to personalize your feed.");
+      return;
+    }
+    if (!activeFormats.length) {
+      setPreferenceError("Choose at least one conversation format.");
+      return;
+    }
+    setSavingPreferences(true);
+    setPreferenceError("");
+    try {
+      await productAction({
+        action: "set_topic_preferences",
+        topics: activeTopics,
+        rankingStyle: activeRankingStyle,
+        preferredFormats: activeFormats,
+        discoveryLevel: activeDiscoveryLevel,
+      });
+      await refresh();
+      setShowPreferences(false);
+      setSelectedTopics(null);
+      setRankingStyle(null);
+      setPreferredFormats(null);
+      setDiscoveryLevel(null);
+      router.replace("/feed", { scroll: false });
+    } catch (reason) {
+      setPreferenceError(
+        reason instanceof Error
+          ? reason.message
+          : "Unable to save your topics.",
+      );
+    } finally {
+      setSavingPreferences(false);
+    }
+  }
+
   return (
     <>
       <PageHeading
@@ -214,8 +432,8 @@ export function FeedScreen() {
       />
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="overflow-hidden rounded-2xl border border-black/8 bg-white shadow-sm">
-          <div className="flex gap-2 border-b border-black/8 px-5 py-4">
-            {["For you", "Following", "Newest"].map((item) => (
+          <div className="flex flex-wrap gap-2 border-b border-black/8 px-5 py-4">
+            {(["For you", "Following", "Newest"] as FeedScope[]).map((item) => (
               <button
                 key={item}
                 onClick={() => setScope(item)}
@@ -224,16 +442,175 @@ export function FeedScreen() {
                 {item}
               </button>
             ))}
+            {personalization?.configured ? (
+              <button
+                onClick={editPreferences}
+                className="ml-auto rounded-full px-3 py-2 text-xs font-extrabold text-lilac hover:bg-lilac/5"
+              >
+                Tune feed
+              </button>
+            ) : null}
           </div>
+          {preferencesOpen ? (
+            <div className="border-b border-black/8 bg-butter/45 px-5 py-6 sm:px-7">
+              <div className="max-w-4xl">
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-lilac">
+                  Personalize your feed
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-extrabold">
+                  What topics do you want to follow?
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-black/52">
+                  Your choices shape “For you” and determine what appears in
+                  “Following.” Votes and responses also improve your ranking.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {(personalization?.availableTopics || []).map((topic) => {
+                    const selected = activeTopics.includes(topic);
+                    return (
+                      <button
+                        type="button"
+                        key={topic}
+                        aria-pressed={selected}
+                        onClick={() => toggleTopic(topic)}
+                        className={`rounded-full border px-4 py-2 text-sm font-extrabold transition ${selected ? "border-ink bg-ink text-white" : "border-black/12 bg-white text-black/62 hover:border-black/30"}`}
+                      >
+                        {selected ? "✓ " : ""}
+                        {topic}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-7 text-sm font-extrabold">
+                  How should we rank your “For you” feed?
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {rankingOptions.map((option) => {
+                    const selected = activeRankingStyle === option.value;
+                    return (
+                      <button
+                        type="button"
+                        key={option.value}
+                        aria-pressed={selected}
+                        onClick={() => setRankingStyle(option.value)}
+                        className={`rounded-xl border p-4 text-left transition ${selected ? "border-lilac bg-white ring-2 ring-lilac/10" : "border-black/10 bg-white/60 hover:border-black/25"}`}
+                      >
+                        <span className="block text-sm font-extrabold">
+                          {option.label}
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-black/45">
+                          {option.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-7 text-sm font-extrabold">
+                  Which conversation formats do you prefer?
+                </p>
+                <p className="mt-1 text-xs text-black/45">
+                  Select one or more.
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {formatOptions.map((option) => {
+                    const selected = activeFormats.includes(option.value);
+                    return (
+                      <button
+                        type="button"
+                        key={option.value}
+                        aria-pressed={selected}
+                        onClick={() => toggleFormat(option.value)}
+                        className={`rounded-xl border p-4 text-left transition ${selected ? "border-ink bg-ink text-white" : "border-black/10 bg-white/60 hover:border-black/25"}`}
+                      >
+                        <span className="block text-sm font-extrabold">
+                          {selected ? "✓ " : ""}
+                          {option.label}
+                        </span>
+                        <span
+                          className={`mt-1 block text-xs leading-5 ${selected ? "text-white/60" : "text-black/45"}`}
+                        >
+                          {option.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-7 text-sm font-extrabold">
+                  How much should we broaden your recommendations?
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {discoveryOptions.map((option) => {
+                    const selected = activeDiscoveryLevel === option.value;
+                    return (
+                      <button
+                        type="button"
+                        key={option.value}
+                        aria-pressed={selected}
+                        onClick={() => setDiscoveryLevel(option.value)}
+                        className={`rounded-xl border p-4 text-left transition ${selected ? "border-lilac bg-white ring-2 ring-lilac/10" : "border-black/10 bg-white/60 hover:border-black/25"}`}
+                      >
+                        <span className="block text-sm font-extrabold">
+                          {option.label}
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-black/45">
+                          {option.description}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {preferenceError ? (
+                  <p className="mt-3 text-sm font-bold text-red-600">
+                    {preferenceError}
+                  </p>
+                ) : null}
+                <div className="mt-5 flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={savingPreferences}
+                    onClick={savePreferences}
+                    className="rounded-full bg-lilac px-5 py-2.5 text-sm font-extrabold text-white disabled:opacity-50"
+                  >
+                    {savingPreferences ? "Saving..." : "Save preferences"}
+                  </button>
+                  {personalization?.configured ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPreferences(false);
+                        setSelectedTopics(null);
+                        setRankingStyle(null);
+                        setPreferredFormats(null);
+                        setDiscoveryLevel(null);
+                        router.replace("/feed", { scroll: false });
+                      }}
+                      className="rounded-full px-4 py-2.5 text-sm font-bold text-black/45"
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
           {error ? (
             <p className="p-6 text-sm font-bold text-red-600">{error}</p>
           ) : null}
           {!data ? (
             <p className="p-8 text-sm text-black/40">Loading live polls...</p>
-          ) : (
+          ) : data.polls.length ? (
             data.polls.map((poll) => (
               <PollCard key={poll.id} poll={poll} onChanged={refresh} />
             ))
+          ) : (
+            <div className="p-8 text-center">
+              <p className="font-display text-xl font-extrabold">
+                No followed-topic polls yet
+              </p>
+              <p className="mt-2 text-sm text-black/45">
+                Tune your feed or check Newest for more conversations.
+              </p>
+            </div>
           )}
         </section>
         <aside className="space-y-7">
@@ -281,52 +658,107 @@ export function FeedScreen() {
   );
 }
 
-const regions = [
-  { name: "West", score: 72, change: "+8%", topic: "Climate resilience" },
-  { name: "Midwest", score: 58, change: "+3%", topic: "Manufacturing" },
-  { name: "South", score: 47, change: "-2%", topic: "Healthcare access" },
-  { name: "Northeast", score: 66, change: "+5%", topic: "Housing costs" },
+const mapMarkerPositions = [
+  { left: 22, top: 40 },
+  { left: 48, top: 39 },
+  { left: 57, top: 64 },
+  { left: 74, top: 33 },
 ];
 
 export function SentimentScreen() {
-  const [period, setPeriod] = useState("7 days");
-  const [region, setRegion] = useState(regions[0]);
+  const [period, setPeriod] = useState<SentimentPeriod>("7 days");
+  const [selectedPollId, setSelectedPollId] = useState<number | null>(null);
+  const [selectedRegionName, setSelectedRegionName] = useState("West");
+  const { data, error } = useProductData();
+  const selectedPoll =
+    data?.polls.find((poll) => poll.id === selectedPollId) || data?.polls[0];
+  const regions = selectedPoll?.regionalResults[period] || [];
+  const region =
+    regions.find((item) => item.name === selectedRegionName) || regions[0];
+  const leadingOption = region?.options.reduce<
+    RegionalResult["options"][number] | null
+  >(
+    (leading, option) =>
+      !leading || option.votes > leading.votes ? option : leading,
+    null,
+  );
+  const nationalTotal =
+    selectedPoll?.options.reduce((sum, option) => sum + option.votes, 0) || 0;
+  const nationalLeading = selectedPoll?.options.reduce<
+    ProductPoll["options"][number] | null
+  >(
+    (leading, option) =>
+      !leading || option.votes > leading.votes ? option : leading,
+    null,
+  );
+  const nationalLeadingPercent =
+    nationalTotal && nationalLeading
+      ? Math.round((nationalLeading.votes / nationalTotal) * 100)
+      : 0;
+
   return (
     <>
       <PageHeading
         title="Sentiment map"
-        description="Explore how verified public opinion is moving across regions and topics."
+        description="Compare how each region answered a specific poll question."
         action={
           <div className="flex rounded-full border border-black/10 bg-white p-1">
-            {["24 hours", "7 days", "30 days"].map((item) => (
-              <button
-                key={item}
-                onClick={() => setPeriod(item)}
-                className={`rounded-full px-4 py-2 text-xs font-bold ${period === item ? "bg-ink text-white" : "text-black/45"}`}
-              >
-                {item}
-              </button>
-            ))}
+            {(["24 hours", "7 days", "30 days"] as SentimentPeriod[]).map(
+              (item) => (
+                <button
+                  key={item}
+                  onClick={() => setPeriod(item)}
+                  className={`rounded-full px-4 py-2 text-xs font-bold ${period === item ? "bg-ink text-white" : "text-black/45"}`}
+                >
+                  {item}
+                </button>
+              ),
+            )}
           </div>
         }
       />
+      {error ? (
+        <p className="mb-5 text-sm font-bold text-red-600">{error}</p>
+      ) : null}
+      <label className="mb-6 block max-w-3xl text-sm font-extrabold">
+        Question to map
+        <select
+          value={selectedPoll?.id || ""}
+          onChange={(event) => {
+            setSelectedPollId(Number(event.target.value));
+            setSelectedRegionName("West");
+          }}
+          className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3.5 font-normal outline-none focus:border-lilac"
+        >
+          {!data ? <option>Loading questions...</option> : null}
+          {data?.polls.map((poll) => (
+            <option key={poll.id} value={poll.id}>
+              {poll.question}
+            </option>
+          ))}
+        </select>
+      </label>
       <div className="grid gap-7 lg:grid-cols-[1fr_360px]">
         <section className="relative min-h-[560px] overflow-hidden rounded-2xl border border-black/8 bg-[#eef0e9]">
           <div className="sentiment-map-bg absolute inset-0 opacity-90" />
           <div className="absolute left-5 top-5 rounded-full bg-white/90 px-4 py-2 text-xs font-extrabold shadow-sm backdrop-blur">
-            National confidence · 61%
+            National leader · {nationalLeading?.label || "No responses"}
+            {nationalLeading ? ` · ${nationalLeadingPercent}%` : ""}
           </div>
           {regions.map((item, index) => (
             <button
               key={item.name}
-              onClick={() => setRegion(item)}
+              onClick={() => setSelectedRegionName(item.name)}
               style={{
-                left: `${[22, 48, 57, 74][index]}%`,
-                top: `${[40, 39, 64, 33][index]}%`,
+                left: `${mapMarkerPositions[index]?.left || 50}%`,
+                top: `${mapMarkerPositions[index]?.top || 50}%`,
               }}
-              className={`absolute grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 border-white text-sm font-extrabold shadow-lg transition hover:scale-110 ${region.name === item.name ? "bg-lilac text-white" : "bg-ink text-white"}`}
+              title={`${item.name}: ${item.total.toLocaleString()} responses`}
+              className={`absolute grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-4 border-white text-sm font-extrabold shadow-lg transition hover:scale-110 ${region?.name === item.name ? "bg-lilac text-white" : "bg-ink text-white"}`}
             >
-              {item.score}
+              {item.total
+                ? Math.max(...item.options.map((option) => option.percent))
+                : "—"}
             </button>
           ))}
         </section>
@@ -335,43 +767,41 @@ export function SentimentScreen() {
             Selected region
           </p>
           <h2 className="mt-2 font-display text-3xl font-extrabold">
-            {region.name}
+            {region?.name || "No region"}
           </h2>
-          <p className="mt-1 text-sm text-black/45">{period} movement</p>
+          <p className="mt-1 text-sm text-black/45">
+            {period} · {(region?.total || 0).toLocaleString()} responses
+          </p>
           <div className="my-7 border-y border-black/8 py-6">
             <p className="font-display text-6xl font-extrabold">
-              {region.score}
+              {leadingOption?.percent || 0}
               <span className="text-2xl text-black/30">%</span>
             </p>
-            <p
-              className={`mt-2 text-sm font-extrabold ${region.change.startsWith("+") ? "text-emerald-600" : "text-red-600"}`}
-            >
-              {region.change} from prior period
+            <p className="mt-2 text-sm font-extrabold text-lilac">
+              {leadingOption?.label || "No responses in this period"}
             </p>
           </div>
           <p className="text-xs font-bold uppercase text-black/35">
-            Leading conversation
+            Selected question
           </p>
-          <p className="mt-2 text-lg font-extrabold">{region.topic}</p>
+          <p className="mt-2 text-sm font-extrabold leading-6">
+            {selectedPoll?.question || "Loading question..."}
+          </p>
           <div className="mt-7 space-y-4">
-            {["Support", "Undecided", "Oppose"].map((label, index) => (
-              <div key={label}>
+            {region?.options.map((option) => (
+              <div key={option.optionId}>
                 <div className="mb-1 flex justify-between text-xs font-bold">
-                  <span>{label}</span>
-                  <span>
-                    {[region.score, 18, 100 - region.score - 18][index]}%
-                  </span>
+                  <span className="max-w-[220px] truncate">{option.label}</span>
+                  <span>{option.percent}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-black/7">
                   <div
                     className="h-full rounded-full bg-lilac"
-                    style={{
-                      width: `${[region.score, 18, 100 - region.score - 18][index]}%`,
-                    }}
+                    style={{ width: `${option.percent}%` }}
                   />
                 </div>
               </div>
-            ))}
+            )) || null}
           </div>
         </aside>
       </div>
@@ -379,12 +809,161 @@ export function SentimentScreen() {
   );
 }
 
-export function DebateScreen() {
-  const [stance, setStance] = useState("Support");
+function DebateSetupForm({
+  poll,
+  onSaved,
+  onCancel,
+}: {
+  poll: ProductPoll;
+  onSaved: () => Promise<void>;
+  onCancel?: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.checkValidity()) return;
+    const fields = new FormData(form);
+    setBusy(true);
+    setError("");
+    try {
+      await productAction({
+        action: "save_debate",
+        pollId: poll.id,
+        framingQuestion: fields.get("framingQuestion"),
+        context: fields.get("context"),
+        supportLabel: fields.get("supportLabel"),
+        opposeLabel: fields.get("opposeLabel"),
+        groundRules: fields.get("groundRules"),
+      });
+      await onSaved();
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : "Unable to save debate.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      className="mx-auto max-w-4xl rounded-2xl border border-black/8 bg-white p-6 sm:p-8"
+    >
+      <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-lilac">
+        {poll.debate ? "Edit debate framing" : "Start a debate"}
+      </p>
+      <h2 className="mt-2 font-display text-3xl font-extrabold">
+        Customize this question for discussion
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-black/50">
+        The original poll stays unchanged. These details help participants
+        understand the debate and take clear positions.
+      </p>
+      <label className="mt-7 block text-sm font-extrabold">
+        Debate question
+        <textarea
+          name="framingQuestion"
+          required
+          minLength={10}
+          maxLength={220}
+          rows={3}
+          defaultValue={poll.debate?.framingQuestion || poll.question}
+          className="mt-2 w-full resize-none rounded-xl border border-black/10 p-4 text-lg font-bold outline-none focus:border-lilac"
+        />
+      </label>
+      <label className="mt-5 block text-sm font-extrabold">
+        Context or background
+        <textarea
+          name="context"
+          maxLength={1200}
+          rows={4}
+          defaultValue={poll.debate?.context || ""}
+          placeholder="Add facts, constraints, or background participants should consider."
+          className="mt-2 w-full resize-none rounded-xl border border-black/10 p-4 font-normal leading-6 outline-none focus:border-lilac"
+        />
+      </label>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <label className="text-sm font-extrabold">
+          Supporting position label
+          <input
+            name="supportLabel"
+            required
+            minLength={2}
+            maxLength={40}
+            defaultValue={poll.debate?.supportLabel || "Support"}
+            className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-lilac"
+          />
+        </label>
+        <label className="text-sm font-extrabold">
+          Opposing position label
+          <input
+            name="opposeLabel"
+            required
+            minLength={2}
+            maxLength={40}
+            defaultValue={poll.debate?.opposeLabel || "Oppose"}
+            className="mt-2 w-full rounded-xl border border-black/10 px-4 py-3 font-normal outline-none focus:border-lilac"
+          />
+        </label>
+      </div>
+      <label className="mt-5 block text-sm font-extrabold">
+        Ground rules
+        <textarea
+          name="groundRules"
+          maxLength={500}
+          rows={2}
+          defaultValue={poll.debate?.groundRules || ""}
+          placeholder="For example: cite sources, challenge ideas rather than people."
+          className="mt-2 w-full resize-none rounded-xl border border-black/10 p-4 font-normal outline-none focus:border-lilac"
+        />
+      </label>
+      {error ? (
+        <p className="mt-4 text-sm font-bold text-red-600">{error}</p>
+      ) : null}
+      <div className="mt-6 flex gap-3">
+        <button
+          disabled={busy}
+          className="rounded-full bg-lilac px-6 py-3 text-sm font-extrabold text-white disabled:opacity-50"
+        >
+          {busy ? "Saving..." : poll.debate ? "Save changes" : "Start debate"}
+        </button>
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-full px-5 py-3 text-sm font-bold text-black/45"
+          >
+            Cancel
+          </button>
+        ) : null}
+      </div>
+    </form>
+  );
+}
+
+export function DebateScreen({ pollId }: { pollId?: number }) {
+  const [stance, setStance] = useState<"support" | "unsure" | "oppose">(
+    "support",
+  );
   const [draft, setDraft] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [editingFraming, setEditingFraming] = useState(false);
   const { data, error, refresh } = useProductData();
-  const poll = data?.polls[0];
+  const poll = pollId
+    ? data?.polls.find((item) => item.id === pollId)
+    : data?.polls[0];
+  const debate = poll?.debate;
+  const stanceOptions = debate
+    ? [
+        { value: "support" as const, label: debate.supportLabel },
+        { value: "unsure" as const, label: "Unsure" },
+        { value: "oppose" as const, label: debate.opposeLabel },
+      ]
+    : [];
   async function reply(event: FormEvent) {
     event.preventDefault();
     if (!draft.trim() || !poll) return;
@@ -393,7 +972,7 @@ export function DebateScreen() {
         action: "comment",
         pollId: poll.id,
         text: draft,
-        stance,
+        stance: stanceOptions.find((item) => item.value === stance)?.label,
       });
       setDraft("");
       setSubmitError("");
@@ -403,6 +982,36 @@ export function DebateScreen() {
         reason instanceof Error ? reason.message : "Unable to post response.",
       );
     }
+  }
+  if (data && pollId && !poll) {
+    return (
+      <div className="py-20 text-center">
+        <h1 className="font-display text-3xl font-extrabold">
+          Debate question not found
+        </h1>
+        <a href="/feed" className="mt-5 inline-block font-bold text-lilac">
+          Return to feed
+        </a>
+      </div>
+    );
+  }
+  if (poll && (!debate || editingFraming)) {
+    return (
+      <>
+        <PageHeading
+          title={debate ? "Edit debate" : "Start debate"}
+          description="Add enough framing for a focused, constructive discussion."
+        />
+        <DebateSetupForm
+          poll={poll}
+          onSaved={async () => {
+            await refresh();
+            setEditingFraming(false);
+          }}
+          onCancel={debate ? () => setEditingFraming(false) : undefined}
+        />
+      </>
+    );
   }
   return (
     <>
@@ -423,21 +1032,36 @@ export function DebateScreen() {
             ).toLocaleString()}{" "}
             participants
           </div>
-          <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight">
-            {poll?.question || "Loading debate..."}
-          </h2>
-          <p className="mt-3 leading-7 text-black/55">
-            Choose a position, explain your reasoning, and respond to the
-            argument rather than the person.
-          </p>
-          <div className="mt-6 flex gap-2">
-            {["Support", "Unsure", "Oppose"].map((item) => (
+          <div className="mt-4 flex items-start justify-between gap-5">
+            <h2 className="font-display text-3xl font-extrabold leading-tight">
+              {debate?.framingQuestion || "Loading debate..."}
+            </h2>
+            {debate?.canEdit ? (
               <button
-                key={item}
-                onClick={() => setStance(item)}
-                className={`rounded-full px-5 py-2.5 text-sm font-extrabold ${stance === item ? "bg-ink text-white" : "border border-black/10"}`}
+                onClick={() => setEditingFraming(true)}
+                className="shrink-0 rounded-full border border-black/10 px-4 py-2 text-xs font-extrabold text-lilac"
               >
-                {item}
+                Edit framing
+              </button>
+            ) : null}
+          </div>
+          <p className="mt-3 leading-7 text-black/55">
+            {debate?.context ||
+              "Choose a position, explain your reasoning, and respond to the argument rather than the person."}
+          </p>
+          {debate?.groundRules ? (
+            <p className="mt-4 rounded-xl bg-butter/55 p-4 text-sm leading-6 text-black/58">
+              <b>Ground rules:</b> {debate.groundRules}
+            </p>
+          ) : null}
+          <div className="mt-6 flex gap-2">
+            {stanceOptions.map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setStance(item.value)}
+                className={`rounded-full px-5 py-2.5 text-sm font-extrabold ${stance === item.value ? "bg-ink text-white" : "border border-black/10"}`}
+              >
+                {item.label}
               </button>
             ))}
           </div>
@@ -495,9 +1119,9 @@ export function DebateScreen() {
           </h3>
           <div className="mt-5 space-y-5">
             {[
-              ["Support", 54],
+              [debate?.supportLabel || "Support", 54],
               ["Unsure", 17],
-              ["Oppose", 29],
+              [debate?.opposeLabel || "Oppose", 29],
             ].map(([label, value]) => (
               <div key={label as string}>
                 <div className="flex justify-between text-sm font-bold">

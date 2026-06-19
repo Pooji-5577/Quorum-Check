@@ -12,6 +12,7 @@ import {
   Map,
   MessageSquareText,
   Newspaper,
+  SlidersHorizontal,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -101,6 +102,14 @@ export default function ProductShell({
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <Link
+              href="/feed?personalize=1"
+              title="Personalize your feed"
+              className="flex h-10 items-center gap-2 rounded-full border border-black/8 bg-white px-3 text-sm font-bold text-black/55 hover:border-lilac/30 hover:text-lilac"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              <span className="hidden lg:inline">Personalize</span>
+            </Link>
+            <Link
               href="/notifications"
               aria-label="Notifications"
               title="Notifications"
@@ -158,6 +167,13 @@ export default function ProductShell({
           </div>
         </div>
         <nav className="flex gap-1 overflow-x-auto border-t border-black/5 px-4 py-2 xl:hidden">
+          <Link
+            href="/feed?personalize=1"
+            className="flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-bold text-lilac"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Personalize
+          </Link>
           {navigation.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
