@@ -96,37 +96,8 @@ export default function AuthScreen() {
 
     setLoading(true);
     setNotice(null);
-    const data = new FormData(form);
-    try {
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode,
-          name: data.get("name"),
-          email: data.get("email"),
-          password: data.get("password"),
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        setNotice({
-          kind: "error",
-          text: result.error || "Authentication failed. Please try again.",
-        });
-        return;
-      }
-      const redirectTo = result.user?.role ? "/feed" : "/select-role";
-      router.push(redirectTo);
-      router.refresh();
-    } catch {
-      setNotice({
-        kind: "error",
-        text: "Unable to reach the authentication service. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
+    router.push("/feed");
+    router.refresh();
   }
 
   const action = mode === "signup" ? "Create account" : "Log in";

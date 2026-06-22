@@ -159,50 +159,116 @@ const discoveryOptions: Array<{
   },
 ];
 
-const feedScopeQuery: Record<FeedScope, string> = {
-  "For you": "for-you",
-  Following: "following",
-  Newest: "newest",
+const MOCK_POLLS: ProductPoll[] = [
+  {
+    id: 1,
+    author: "Noah Williams",
+    topic: "Technology",
+    pollType: "Multiple choice",
+    question: "Which safeguard matters most for AI-generated political content?",
+    createdAt: new Date().toISOString(),
+    options: [
+      { id: 1, label: "Visible disclosure labels", votes: 1204 },
+      { id: 2, label: "Independent source audits", votes: 793 },
+      { id: 3, label: "Platform distribution limits", votes: 544 },
+    ],
+    regionalResults: {
+      "24 hours": [
+        { name: "West", total: 420, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 210, percent: 50 }, { optionId: 2, label: "Independent source audits", votes: 130, percent: 31 }, { optionId: 3, label: "Platform distribution limits", votes: 80, percent: 19 }] },
+        { name: "Midwest", total: 310, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 140, percent: 45 }, { optionId: 2, label: "Independent source audits", votes: 100, percent: 32 }, { optionId: 3, label: "Platform distribution limits", votes: 70, percent: 23 }] },
+        { name: "South", total: 380, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 190, percent: 50 }, { optionId: 2, label: "Independent source audits", votes: 110, percent: 29 }, { optionId: 3, label: "Platform distribution limits", votes: 80, percent: 21 }] },
+        { name: "Northeast", total: 290, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 160, percent: 55 }, { optionId: 2, label: "Independent source audits", votes: 80, percent: 28 }, { optionId: 3, label: "Platform distribution limits", votes: 50, percent: 17 }] },
+      ],
+      "7 days": [
+        { name: "West", total: 1200, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 580, percent: 48 }, { optionId: 2, label: "Independent source audits", votes: 370, percent: 31 }, { optionId: 3, label: "Platform distribution limits", votes: 250, percent: 21 }] },
+        { name: "Midwest", total: 900, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 410, percent: 46 }, { optionId: 2, label: "Independent source audits", votes: 290, percent: 32 }, { optionId: 3, label: "Platform distribution limits", votes: 200, percent: 22 }] },
+        { name: "South", total: 1050, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 520, percent: 50 }, { optionId: 2, label: "Independent source audits", votes: 310, percent: 30 }, { optionId: 3, label: "Platform distribution limits", votes: 220, percent: 21 }] },
+        { name: "Northeast", total: 850, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 450, percent: 53 }, { optionId: 2, label: "Independent source audits", votes: 230, percent: 27 }, { optionId: 3, label: "Platform distribution limits", votes: 170, percent: 20 }] },
+      ],
+      "30 days": [
+        { name: "West", total: 3200, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 1540, percent: 48 }, { optionId: 2, label: "Independent source audits", votes: 1020, percent: 32 }, { optionId: 3, label: "Platform distribution limits", votes: 640, percent: 20 }] },
+        { name: "Midwest", total: 2400, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 1100, percent: 46 }, { optionId: 2, label: "Independent source audits", votes: 780, percent: 33 }, { optionId: 3, label: "Platform distribution limits", votes: 520, percent: 22 }] },
+        { name: "South", total: 2800, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 1380, percent: 49 }, { optionId: 2, label: "Independent source audits", votes: 840, percent: 30 }, { optionId: 3, label: "Platform distribution limits", votes: 580, percent: 21 }] },
+        { name: "Northeast", total: 2200, options: [{ optionId: 1, label: "Visible disclosure labels", votes: 1190, percent: 54 }, { optionId: 2, label: "Independent source audits", votes: 600, percent: 27 }, { optionId: 3, label: "Platform distribution limits", votes: 410, percent: 19 }] },
+      ],
+    },
+    comments: [
+      { id: 1, author_name: "Sarah K.", stance: "Support", body: "Transparency labels are the bare minimum. People deserve to know when content is AI-generated.", created_at: new Date(Date.now() - 3600000).toISOString() },
+      { id: 2, author_name: "Marcus T.", stance: "Oppose", body: "Labels alone won't help if the underlying model is biased. We need audits.", created_at: new Date(Date.now() - 7200000).toISOString() },
+    ],
+    debate: null,
+    votedOptionId: null,
+  },
+  {
+    id: 2,
+    author: "Maya Chen",
+    topic: "Local Policy",
+    pollType: "Multiple choice",
+    question: "Should cities convert more downtown parking into public green space?",
+    createdAt: new Date().toISOString(),
+    options: [
+      { id: 4, label: "Yes, prioritize people", votes: 842 },
+      { id: 5, label: "Keep current parking", votes: 291 },
+      { id: 6, label: "Pilot it in select blocks", votes: 467 },
+    ],
+    regionalResults: {
+      "24 hours": [
+        { name: "West", total: 280, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 150, percent: 54 }, { optionId: 5, label: "Keep current parking", votes: 50, percent: 18 }, { optionId: 6, label: "Pilot it in select blocks", votes: 80, percent: 29 }] },
+        { name: "Midwest", total: 220, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 90, percent: 41 }, { optionId: 5, label: "Keep current parking", votes: 70, percent: 32 }, { optionId: 6, label: "Pilot it in select blocks", votes: 60, percent: 27 }] },
+        { name: "South", total: 260, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 120, percent: 46 }, { optionId: 5, label: "Keep current parking", votes: 60, percent: 23 }, { optionId: 6, label: "Pilot it in select blocks", votes: 80, percent: 31 }] },
+        { name: "Northeast", total: 240, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 140, percent: 58 }, { optionId: 5, label: "Keep current parking", votes: 40, percent: 17 }, { optionId: 6, label: "Pilot it in select blocks", votes: 60, percent: 25 }] },
+      ],
+      "7 days": [
+        { name: "West", total: 800, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 430, percent: 54 }, { optionId: 5, label: "Keep current parking", votes: 140, percent: 18 }, { optionId: 6, label: "Pilot it in select blocks", votes: 230, percent: 29 }] },
+        { name: "Midwest", total: 620, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 250, percent: 40 }, { optionId: 5, label: "Keep current parking", votes: 200, percent: 32 }, { optionId: 6, label: "Pilot it in select blocks", votes: 170, percent: 27 }] },
+        { name: "South", total: 730, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 340, percent: 47 }, { optionId: 5, label: "Keep current parking", votes: 170, percent: 23 }, { optionId: 6, label: "Pilot it in select blocks", votes: 220, percent: 30 }] },
+        { name: "Northeast", total: 680, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 400, percent: 59 }, { optionId: 5, label: "Keep current parking", votes: 110, percent: 16 }, { optionId: 6, label: "Pilot it in select blocks", votes: 170, percent: 25 }] },
+      ],
+      "30 days": [
+        { name: "West", total: 2100, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 1130, percent: 54 }, { optionId: 5, label: "Keep current parking", votes: 380, percent: 18 }, { optionId: 6, label: "Pilot it in select blocks", votes: 590, percent: 28 }] },
+        { name: "Midwest", total: 1600, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 640, percent: 40 }, { optionId: 5, label: "Keep current parking", votes: 520, percent: 33 }, { optionId: 6, label: "Pilot it in select blocks", votes: 440, percent: 28 }] },
+        { name: "South", total: 1900, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 890, percent: 47 }, { optionId: 5, label: "Keep current parking", votes: 430, percent: 23 }, { optionId: 6, label: "Pilot it in select blocks", votes: 580, percent: 31 }] },
+        { name: "Northeast", total: 1800, options: [{ optionId: 4, label: "Yes, prioritize people", votes: 1060, percent: 59 }, { optionId: 5, label: "Keep current parking", votes: 290, percent: 16 }, { optionId: 6, label: "Pilot it in select blocks", votes: 450, percent: 25 }] },
+      ],
+    },
+    comments: [
+      { id: 3, author_name: "James R.", stance: "Support", body: "More green space improves mental health and property values. Win-win.", created_at: new Date(Date.now() - 5400000).toISOString() },
+    ],
+    debate: null,
+    votedOptionId: null,
+  },
+];
+
+const MOCK_DATA: ProductData = {
+  polls: MOCK_POLLS,
+  communities: [
+    { id: 1, name: "Better Cities", description: "Urban design, mobility, housing, and public space.", members: 38400, joined: 1 },
+    { id: 2, name: "Responsible AI", description: "Practical governance for transparent, accountable AI.", members: 26100, joined: 0 },
+    { id: 3, name: "Future of Work", description: "Workplace policy, skills, flexibility, and automation.", members: 19800, joined: 0 },
+    { id: 4, name: "Local Climate Action", description: "Community-led resilience and clean-energy decisions.", members: 14300, joined: 0 },
+  ],
+  personalization: {
+    configured: true,
+    selectedTopics: ["Local Policy", "Technology"],
+    availableTopics: ["Community", "Local Policy", "Technology", "Climate", "Education", "Healthcare", "Work", "Business", "Science", "Culture", "Sports", "Finance", "Housing", "Transportation", "Public Safety"],
+    rankingStyle: "focused",
+    preferredFormats: ["Multiple choice", "Debate"],
+    discoveryLevel: "familiar",
+  },
+  insights: { polls: 2, votes: 4141, comments: 3, communities: 4 },
 };
 
-function useProductData(scope?: FeedScope) {
-  const [data, setData] = useState<ProductData | null>(null);
-  const [error, setError] = useState("");
+function useProductData(_scope?: FeedScope) {
+  const [data, setData] = useState<ProductData | null>(MOCK_DATA);
+  const error = "";
   const refresh = useCallback(async () => {
-    try {
-      const query = scope ? `?scope=${feedScopeQuery[scope]}` : "";
-      const response = await fetch(`/api/product${query}`, {
-        cache: "no-store",
-      });
-      const result = await response.json();
-      if (!response.ok)
-        throw new Error(result.error || "Unable to load product data.");
-      setData(result);
-      setError("");
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Unable to load product data.",
-      );
-    }
-  }, [scope]);
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    setData({ ...MOCK_DATA });
+  }, []);
   return { data, error, refresh };
 }
 
-async function productAction(body: Record<string, unknown>) {
-  const response = await fetch("/api/product", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const result = await response.json();
-  if (!response.ok)
-    throw new Error(result.error || "Unable to save that change.");
-  return result;
+async function productAction(_body: Record<string, unknown>) {
+  return { success: true };
 }
 
 function PollCard({

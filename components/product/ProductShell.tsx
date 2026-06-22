@@ -21,7 +21,7 @@ import {
   Vote,
 } from "lucide-react";
 import { Brand } from "@/components/SiteChrome";
-import type { SessionUser } from "@/lib/auth";
+type SessionUser = { id: number; name: string; email: string; role: string };
 
 type NavItem = { label: string; href: string; icon: typeof BarChart3 };
 type WorkspaceGroup = { title: string; links: string[][] };

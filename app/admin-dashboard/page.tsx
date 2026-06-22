@@ -1,4 +1,3 @@
-import { getProductDb } from "@/lib/product-db";
 import { MarketingHeader, StandardFooter } from "@/components/SiteChrome";
 
 type Contact = {
@@ -14,7 +13,11 @@ type Contact = {
   created_at: Date | string;
 };
 
-export const dynamic = "force-dynamic";
+const MOCK_CONTACTS: Contact[] = [
+  { id: 1, name: "Alex Rivera", email: "alex@example.com", inquiry_type: "general", subject: "Platform feedback", message: "Love the concept! When is the public beta?", newsletter: 1, ip_address: null, user_agent: null, created_at: new Date().toISOString() },
+  { id: 2, name: "Priya Sharma", email: "priya@org.co", inquiry_type: "enterprise", subject: "Enterprise plan inquiry", message: "We're a 500-person org looking at verified polling for internal decisions.", newsletter: 0, ip_address: null, user_agent: null, created_at: new Date(Date.now() - 86400000).toISOString() },
+];
+
 export const metadata = { title: "Admin Dashboard · Quorum Check" };
 
 export default async function AdminDashboard({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
@@ -22,30 +25,12 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const search = params.search?.trim() || "";
   const type = params.type || "all";
   const status = params.status || "all";
-  let contacts: Contact[] = [];
-  let error = "";
+  const error = "";
 
-  try {
-    const where: string[] = [];
-    const values: string[] = [];
-    if (search) {
-      where.push("(name LIKE ? OR email LIKE ? OR subject LIKE ? OR message LIKE ?)");
-      values.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
-    }
-    if (type !== "all") {
-      where.push("inquiry_type = ?");
-      values.push(type);
-    }
-    if (status !== "all") {
-      where.push("status = ?");
-      values.push(status);
-    }
-    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
-    contacts = getProductDb().prepare(`SELECT * FROM contacts ${whereSql} ORDER BY created_at DESC LIMIT 50`).all(...values) as unknown as Contact[];
-  } catch (err) {
-    console.error(err);
-    error = "Unable to load contact submissions.";
-  }
+  let contacts = MOCK_CONTACTS;
+  if (search) contacts = contacts.filter((c) => `${c.name} ${c.email} ${c.subject} ${c.message}`.toLowerCase().includes(search.toLowerCase()));
+  if (type !== "all") contacts = contacts.filter((c) => c.inquiry_type === type);
+  void status;
 
   return (
     <>

@@ -12,28 +12,10 @@ export function ContactForm() {
     event.preventDefault();
     const form = event.currentTarget;
     setLoading(true);
-    try {
-      const data = new FormData(form);
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.get("name"),
-          email: data.get("email"),
-          inquiryType: data.get("inquiry_type"),
-          subject: data.get("subject"),
-          message: data.get("message"),
-          newsletter: data.get("newsletter") === "1",
-        }),
-      });
-      const result = await response.json();
-      setStatus({ kind: result.success ? "success" : "error", text: result.message || result.error });
-      if (result.success) form.reset();
-    } catch {
-      setStatus({ kind: "error", text: "Unable to send your message. Please try again." });
-    } finally {
-      setLoading(false);
-    }
+    await new Promise((r) => setTimeout(r, 500));
+    setStatus({ kind: "success", text: "Thanks for reaching out! We'll get back to you soon." });
+    form.reset();
+    setLoading(false);
   }
 
   return (
@@ -88,21 +70,10 @@ export function SignupForm() {
     event.preventDefault();
     const form = event.currentTarget;
     setLoading(true);
-    try {
-      const data = new FormData(form);
-      const response = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: data.get("email"), plan: data.get("plan") }),
-      });
-      const result = await response.json();
-      setStatus({ kind: result.success ? "success" : "error", text: result.message || result.error });
-      if (result.success) form.reset();
-    } catch {
-      setStatus({ kind: "error", text: "Unable to join the waitlist. Please try again." });
-    } finally {
-      setLoading(false);
-    }
+    await new Promise((r) => setTimeout(r, 500));
+    setStatus({ kind: "success", text: "You're on the list! We'll notify you when early access opens." });
+    form.reset();
+    setLoading(false);
   }
 
   return (

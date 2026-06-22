@@ -45,20 +45,8 @@ export default function RoleSelectScreen() {
   async function handleContinue() {
     if (!selected) return;
     setLoading(true);
-    try {
-      const response = await fetch("/api/select-role", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: selected }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        router.push(selected === "creator" ? "/creator-studio" : "/feed");
-        router.refresh();
-      }
-    } finally {
-      setLoading(false);
-    }
+    router.push(selected === "creator" ? "/creator-studio" : "/feed");
+    router.refresh();
   }
 
   return (
