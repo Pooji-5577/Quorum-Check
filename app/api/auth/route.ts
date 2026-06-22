@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createSessionToken, hashPassword, sessionCookie, verifyPassword } from "@/lib/auth";
 import { getProductDb } from "@/lib/product-db";
 
-type UserRow = { id: number; name: string; email: string; password_hash: string };
+type UserRow = { id: number; name: string; email: string; password_hash: string; role: string };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -19,17 +19,17 @@ export async function POST(request: Request) {
 
   try {
     const db = getProductDb();
-    const existing = db.prepare("SELECT id, name, email, password_hash FROM users WHERE email = ? LIMIT 1").get(email) as UserRow | undefined;
-    let user: { id: number; name: string; email: string };
+    const existing = db.prepare("SELECT id, name, email, password_hash, role FROM users WHERE email = ? LIMIT 1").get(email) as UserRow | undefined;
+    let user: { id: number; name: string; email: string; role: string };
 
     if (mode === "signup") {
       if (existing) return failure("An account already exists for this email. Log in instead.", 409);
       const passwordHash = await hashPassword(password);
       const result = db.prepare("INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)").run(name, email, passwordHash);
-      user = { id: Number(result.lastInsertRowid), name, email };
+      user = { id: Number(result.lastInsertRowid), name, email, role: "" };
     } else {
       if (!existing || !(await verifyPassword(password, existing.password_hash))) return failure("Email or password is incorrect.", 401);
-      user = { id: existing.id, name: existing.name, email: existing.email };
+      user = { id: existing.id, name: existing.name, email: existing.email, role: existing.role || "" };
       db.prepare("UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?").run(existing.id);
     }
 

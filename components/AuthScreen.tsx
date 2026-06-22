@@ -3,10 +3,52 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useId, useState } from "react";
-import { Apple } from "lucide-react";
 
 type AuthMode = "signup" | "login";
 type Notice = { kind: "info" | "error"; text: string } | null;
+
+function AppleLogo() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="20"
+      height="20"
+      viewBox="0 0 384 512"
+      className="shrink-0 fill-current"
+    >
+      <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5c0 26.2 4.8 53.3 14.4 81.2 12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9ZM262.1 104.5C289.4 72.1 286.9 42.7 286.1 32c-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3Z" />
+    </svg>
+  );
+}
+
+function GoogleLogo() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      className="shrink-0"
+    >
+      <path
+        fill="#4285F4"
+        d="M23.52 12.27c0-.79-.07-1.55-.2-2.27H12v4.29h6.47a5.53 5.53 0 0 1-2.4 3.63v2.96h3.88c2.27-2.09 3.57-5.17 3.57-8.61Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.96-1.07 7.95-2.92l-3.88-2.96c-1.08.72-2.45 1.14-4.07 1.14-3.13 0-5.78-2.11-6.73-4.95H1.26v3.05A12 12 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.31A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.58.38-2.31V6.64H1.26A12 12 0 0 0 0 12c0 1.94.46 3.78 1.26 5.36l4.01-3.05Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.74c1.76 0 3.34.61 4.59 1.8l3.44-3.44C17.95 1.16 15.23 0 12 0A12 12 0 0 0 1.26 6.64l4.01 3.05C6.22 6.85 8.87 4.74 12 4.74Z"
+      />
+    </svg>
+  );
+}
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
@@ -74,7 +116,8 @@ export default function AuthScreen() {
         });
         return;
       }
-      router.push("/feed");
+      const redirectTo = result.user?.role ? "/feed" : "/select-role";
+      router.push(redirectTo);
       router.refresh();
     } catch {
       setNotice({
@@ -176,7 +219,7 @@ export default function AuthScreen() {
               }
               className="flex min-h-12 items-center justify-center gap-3 rounded-full bg-black px-5 py-3 text-sm font-bold text-white"
             >
-              <Apple className="h-5 w-5" />
+              <AppleLogo />
               Continue with Apple
             </button>
             <button
@@ -189,9 +232,7 @@ export default function AuthScreen() {
               }
               className="flex min-h-12 items-center justify-center gap-3 rounded-full border border-black/20 bg-white px-5 py-3 text-sm font-bold"
             >
-              <span className="font-display text-lg font-extrabold text-[#4285f4]">
-                G
-              </span>
+              <GoogleLogo />
               Continue with Google
             </button>
           </div>

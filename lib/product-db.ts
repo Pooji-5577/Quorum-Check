@@ -136,6 +136,11 @@ export function getProductDb() {
       "ALTER TABLE votes ADD COLUMN region TEXT NOT NULL DEFAULT 'Unspecified'",
     );
   }
+  if (!userColumns.some((column) => column.name === "role")) {
+    database.exec(
+      "ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT ''",
+    );
+  }
   database.exec(`
     UPDATE votes SET region = CASE ABS(user_id) % 4
       WHEN 0 THEN 'West' WHEN 1 THEN 'Midwest' WHEN 2 THEN 'South' ELSE 'Northeast' END

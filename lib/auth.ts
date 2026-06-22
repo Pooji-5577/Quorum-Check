@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 const scrypt = promisify(scryptCallback);
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
-export type SessionUser = { id: number; name: string; email: string };
+export type SessionUser = { id: number; name: string; email: string; role: string };
 
 function authSecret() {
   const secret = process.env.AUTH_SECRET;
@@ -43,7 +43,7 @@ export function verifySessionToken(token: string | undefined): SessionUser | nul
     if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) return null;
     const value = JSON.parse(Buffer.from(payload, "base64url").toString()) as SessionUser & { exp: number };
     if (!value.id || !value.email || value.exp < Date.now()) return null;
-    return { id: value.id, name: value.name, email: value.email };
+    return { id: value.id, name: value.name, email: value.email, role: value.role || "" };
   } catch {
     return null;
   }

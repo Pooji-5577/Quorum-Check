@@ -7,5 +7,6 @@ export default async function ProductLayout({ children }: { children: React.Reac
   const cookieStore = await cookies();
   const user = verifySessionToken(cookieStore.get(sessionCookie.name)?.value);
   if (!user) redirect("/signup");
+  if (!user.role) redirect("/select-role");
   return <ProductShell user={user}>{children}</ProductShell>;
 }

@@ -7,59 +7,97 @@ import {
   Bell,
   CirclePlus,
   Compass,
+  Gift,
   Grid3X3,
+  LayoutDashboard,
   LogOut,
   Map,
   MessageSquareText,
   Newspaper,
-  SlidersHorizontal,
+  Settings,
+  Shield,
   Sparkles,
   Users,
+  Vote,
 } from "lucide-react";
 import { Brand } from "@/components/SiteChrome";
 import type { SessionUser } from "@/lib/auth";
 
-const navigation = [
+type NavItem = { label: string; href: string; icon: typeof BarChart3 };
+type WorkspaceGroup = { title: string; links: string[][] };
+
+const creatorNav: NavItem[] = [
+  { label: "Dashboard", href: "/creator-studio", icon: LayoutDashboard },
+  { label: "Create Poll", href: "/create-poll", icon: CirclePlus },
+  { label: "Analytics", href: "/creator-analytics", icon: BarChart3 },
+  { label: "Organization", href: "/organization", icon: Users },
+  { label: "Moderation", href: "/moderation", icon: Shield },
+  { label: "Integrations", href: "/integrations", icon: Settings },
+];
+
+const voterNav: NavItem[] = [
   { label: "Feed", href: "/feed", icon: Newspaper },
   { label: "Discover", href: "/discover", icon: Compass },
   { label: "Sentiment Map", href: "/sentiment-map", icon: Map },
   { label: "Debate", href: "/debate", icon: MessageSquareText },
   { label: "Insights", href: "/insights", icon: Sparkles },
   { label: "Communities", href: "/communities", icon: Users },
-  { label: "Create", href: "/creator-studio", icon: CirclePlus },
+  { label: "Rewards", href: "/rewards", icon: Gift },
 ];
 
-const workspaceGroups = [
+const creatorWorkspace: WorkspaceGroup[] = [
   {
-    title: "Voter",
-    links: [
-      ["Voting formats", "/voting-formats"],
-      ["Profile & verification", "/profile"],
-      ["Rewards", "/rewards"],
-      ["Notifications", "/notifications"],
-      ["Privacy center", "/privacy-center"],
-    ],
-  },
-  {
-    title: "Creator",
+    title: "Polls",
     links: [
       ["Creator studio", "/creator-studio"],
+      ["Create poll", "/create-poll"],
       ["Creator analytics", "/creator-analytics"],
+    ],
+  },
+  {
+    title: "Organization",
+    links: [
       ["Organization", "/organization"],
-    ],
-  },
-  {
-    title: "Administration",
-    links: [
       ["Moderation", "/moderation"],
-      ["Platform admin", "/platform-admin"],
-      ["Contact records", "/admin-dashboard"],
+      ["Integrations", "/integrations"],
     ],
   },
   {
-    title: "System",
+    title: "Account",
     links: [
-      ["Integrations", "/integrations"],
+      ["Profile & verification", "/profile"],
+      ["Notifications", "/notifications"],
+      ["Privacy center", "/privacy-center"],
+      ["Public website", "/"],
+    ],
+  },
+];
+
+const voterWorkspace: WorkspaceGroup[] = [
+  {
+    title: "Explore",
+    links: [
+      ["Feed", "/feed"],
+      ["Discover", "/discover"],
+      ["Sentiment map", "/sentiment-map"],
+      ["Debate", "/debate"],
+    ],
+  },
+  {
+    title: "Activity",
+    links: [
+      ["Voting formats", "/voting-formats"],
+      ["Communities", "/communities"],
+      ["Rewards", "/rewards"],
+      ["Insights", "/insights"],
+    ],
+  },
+  {
+    title: "Account",
+    links: [
+      ["Profile & verification", "/profile"],
+      ["Notifications", "/notifications"],
+      ["Privacy center", "/privacy-center"],
       ["Public website", "/"],
     ],
   },
@@ -73,6 +111,10 @@ export default function ProductShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const isCreator = user.role === "creator";
+  const navigation = isCreator ? creatorNav : voterNav;
+  const workspaceGroups = isCreator ? creatorWorkspace : voterWorkspace;
+  const roleLabel = isCreator ? "Creator" : "Voter";
   const initials = user.name
     .split(/\s+/)
     .map((part) => part[0])
@@ -101,14 +143,6 @@ export default function ProductShell({
             })}
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <Link
-              href="/feed?personalize=1"
-              title="Personalize your feed"
-              className="flex h-10 items-center gap-2 rounded-full border border-black/8 bg-white px-3 text-sm font-bold text-black/55 hover:border-lilac/30 hover:text-lilac"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              <span className="hidden lg:inline">Personalize</span>
-            </Link>
             <Link
               href="/notifications"
               aria-label="Notifications"
@@ -147,7 +181,7 @@ export default function ProductShell({
             </details>
             <div className="hidden text-right sm:block">
               <p className="text-sm font-extrabold leading-4">{user.name}</p>
-              <p className="mt-1 text-xs text-black/40">Member</p>
+              <p className="mt-1 text-xs text-black/40">{roleLabel}</p>
             </div>
             <Link
               href="/profile"
@@ -167,13 +201,6 @@ export default function ProductShell({
           </div>
         </div>
         <nav className="flex gap-1 overflow-x-auto border-t border-black/5 px-4 py-2 xl:hidden">
-          <Link
-            href="/feed?personalize=1"
-            className="flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-xs font-bold text-lilac"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Personalize
-          </Link>
           {navigation.map(({ label, href, icon: Icon }) => (
             <Link
               key={href}
