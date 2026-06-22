@@ -708,7 +708,9 @@ export function FeedScreen({
               ))}
             </div>
           </div>
-          <div className="rounded-2xl bg-ink p-6 text-white">
+          <div className="relative overflow-hidden rounded-2xl bg-ink p-6 text-white">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_12%,rgba(240,74,35,.42),transparent_19rem),radial-gradient(circle_at_12%_88%,rgba(255,178,63,.18),transparent_22rem)]" />
+            <div className="relative">
             <ShieldCheck className="h-6 w-6 text-peach" />
             <h3 className="mt-4 font-display text-xl font-extrabold">
               Verified voices
@@ -717,6 +719,7 @@ export function FeedScreen({
               Identity checks protect poll integrity without exposing your
               public profile.
             </p>
+            </div>
           </div>
         </aside>
       </div>
@@ -1274,7 +1277,7 @@ export function InsightsScreen() {
                 <div key={index} className="flex h-full flex-1 items-end">
                   <div
                     title={`${value}%`}
-                    className="w-full rounded-t-md bg-ink transition hover:bg-lilac"
+                    className="w-full rounded-t-md bg-lilac transition hover:bg-lilac/80"
                     style={{ height: `${value}%` }}
                   />
                 </div>
@@ -1287,7 +1290,9 @@ export function InsightsScreen() {
             <span>Week 12</span>
           </div>
         </section>
-        <aside className="rounded-2xl bg-ink p-7 text-white">
+        <aside className="relative overflow-hidden rounded-2xl bg-ink p-7 text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_12%,rgba(240,74,35,.42),transparent_19rem),radial-gradient(circle_at_12%_88%,rgba(255,178,63,.18),transparent_22rem)]" />
+          <div className="relative">
           <Sparkles className="h-6 w-6 text-peach" />
           <h2 className="mt-5 font-display text-2xl font-extrabold">
             What changed
@@ -1298,13 +1303,14 @@ export function InsightsScreen() {
               "Cost remains the strongest objection across every region.",
               "Verified-community responses show less polarization than open polls.",
             ].map((text, index) => (
-              <div key={text} className="flex gap-3">
-                <span className="font-mono text-xs font-bold text-peach">
+              <div key={text} className="flex items-start gap-3">
+                <span className="font-mono text-sm font-bold leading-6 text-peach">
                   0{index + 1}
                 </span>
                 <p className="text-sm leading-6 text-white/68">{text}</p>
               </div>
             ))}
+          </div>
           </div>
         </aside>
       </div>
@@ -1362,7 +1368,7 @@ export function CommunitiesScreen() {
           <article key={item.id} className="bg-white p-7">
             <div className="flex items-start justify-between gap-5">
               <span
-                className={`grid h-12 w-12 place-items-center rounded-xl ${index % 2 ? "bg-ink text-white" : "bg-butter text-lilac"}`}
+                className="grid h-12 w-12 place-items-center rounded-xl bg-butter text-lilac"
               >
                 <Users className="h-5 w-5" />
               </span>

@@ -96,7 +96,7 @@ export default function AuthScreen() {
 
     setLoading(true);
     setNotice(null);
-    router.push("/feed");
+    router.push("/select-role");
     router.refresh();
   }
 
