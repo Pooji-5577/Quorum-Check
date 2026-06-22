@@ -6,7 +6,8 @@ let database: DatabaseSync | undefined;
 
 export function getProductDb() {
   if (database) return database;
-  const dataDirectory = path.join(process.cwd(), ".data");
+  const base = process.env.NODE_ENV === "production" ? "/tmp" : process.cwd();
+  const dataDirectory = path.join(base, ".data");
   mkdirSync(dataDirectory, { recursive: true });
   database = new DatabaseSync(path.join(dataDirectory, "quorum.sqlite"));
   database.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");

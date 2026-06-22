@@ -31,9 +31,6 @@ export function MarketingHeader({ active = "" }: { active?: string }) {
               {label}
             </Link>
           ))}
-          <Link className={`rounded-full px-4 py-2 ${active === "contact" ? "bg-black/5" : "hover:bg-black/5"}`} href="/contact">
-            Contact
-          </Link>
         </nav>
         <div className="flex items-center gap-3">
           <Link href="/contact" className="hidden rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-bold shadow-sm hover:border-black/20 sm:inline-flex">
